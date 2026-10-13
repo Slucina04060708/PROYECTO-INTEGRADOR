@@ -15,3 +15,5 @@ Este proyecto consiste en el diseño e implementación de una aplicación client
 * **Concurrencia:** Atención concurrente y segura de múltiples clientes mediante el uso de *goroutines* y canales.
 
 ## Video Explicativo:
+https://drive.google.com/file/d/1fxkeK9a3nD_wC4BHaLp9tCqehMOz-OfU/view?usp=sharing
+
