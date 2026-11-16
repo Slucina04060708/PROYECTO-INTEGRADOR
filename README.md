@@ -22,4 +22,4 @@ Este proyecto consiste en el diseño e implementación de una aplicación client
 https://drive.google.com/file/d/1fxkeK9a3nD_wC4BHaLp9tCqehMOz-OfU/view?usp=sharing
 
 ## Fase 3
--Fase 3_POO: 
+-Fase 3_POO: https://drive.google.com/file/d/1-c-NxG_Ft8bFMtjgA_O3_mFTx7bPAO8c/view?usp=sharing 
