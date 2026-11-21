@@ -2,7 +2,10 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
@@ -16,6 +19,29 @@ func leerLinea(scanner *bufio.Scanner, prompt string) string {
 	return strings.TrimSpace(scanner.Text())
 }
 
+func registrarEnFastAPI(usuario, password, rol string) {
+	body, _ := json.Marshal(map[string]string{
+		"usuario":  usuario,
+		"password": password,
+		"rol":      rol,
+	})
+	resp, err := http.Post("http://127.0.0.1:8000/register", "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Println("[ERROR 503] No se pudo conectar con el servicio de autenticación.")
+		return
+	}
+	defer resp.Body.Close()
+
+	var res map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&res)
+
+	if resp.StatusCode == 200 {
+		fmt.Printf("[OK 200] %v (Rol: %v)\n", res["mensaje"], res["rol"])
+	} else {
+		fmt.Printf("[ERROR %d] %v\n", resp.StatusCode, res["detail"])
+	}
+}
+
 func main() {
 	cli := cliente.NuevoClienteCorreo("http://127.0.0.1:8080")
 	scanner := bufio.NewScanner(os.Stdin)
@@ -23,19 +49,40 @@ func main() {
 	for {
 		if cli.TokenSesion == "" {
 			fmt.Println("\n==========================================")
-			fmt.Println(" SISTEMA DE CORREOS INTERNOS | LOGIN")
+			fmt.Println(" SISTEMA DE CORREOS INTERNOS | ACCESO")
 			fmt.Println("==========================================")
-			usr := leerLinea(scanner, "Usuario: ")
-			pwd := leerLinea(scanner, "Contraseña: ")
-			if usr == "" || pwd == "" {
-				fmt.Println("[ERROR] Complete usuario y contraseña.")
+			fmt.Println("[1] Iniciar sesión")
+			fmt.Println("[2] Registrar nuevo usuario")
+			fmt.Println("[0] Salir")
+			opcionInicio := leerLinea(scanner, "> Seleccione opción: ")
+
+			if opcionInicio == "0" {
+				fmt.Println("Saliendo del sistema...")
+				return
+			}
+
+			if opcionInicio == "2" {
+				fmt.Println("\n--- REGISTRO DE USUARIO (Política C-01) ---")
+				usr := leerLinea(scanner, "Nuevo usuario: ")
+				pwd := leerLinea(scanner, "Contraseña: ")
+				rol := leerLinea(scanner, "Rol (operativo / administrativo / supervisor): ")
+				registrarEnFastAPI(usr, pwd, rol)
 				continue
 			}
-			res := cli.EnviarSolicitud(dominio.SolicitudCorreo{Accion: "login", Usuario: usr, Password: pwd})
-			if res.Exito {
-				fmt.Printf("[OK] %s | Rol: %s | Token asignado en memoria.\n", res.Mensaje, res.Rol)
-			} else {
-				fmt.Printf("[ERROR %d] %s\n", res.Codigo, res.Mensaje)
+
+			if opcionInicio == "1" {
+				usr := leerLinea(scanner, "Usuario: ")
+				pwd := leerLinea(scanner, "Contraseña: ")
+				if usr == "" || pwd == "" {
+					fmt.Println("[ERROR] Complete usuario y contraseña.")
+					continue
+				}
+				res := cli.EnviarSolicitud(dominio.SolicitudCorreo{Accion: "login", Usuario: usr, Password: pwd})
+				if res.Exito {
+					fmt.Printf("[OK] %s | Rol: %s | Token asignado en memoria.\n", res.Mensaje, res.Rol)
+				} else {
+					fmt.Printf("[ERROR %d] %s\n", res.Codigo, res.Mensaje)
+				}
 			}
 			continue
 		}
